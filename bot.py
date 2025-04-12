@@ -3,6 +3,7 @@ from telegram import Update
 from flask import Flask
 import os
 import asyncio
+from threading import Thread
 
 app = Flask(__name__)
 
@@ -17,20 +18,23 @@ def home():
 async def forward(update: Update, context):
     await update.message.forward(chat_id=CHAT_ID)
 
-async def start_bot():
-    # Создаем Application вместо Updater
-    application = Application.builder().token(TOKEN).build()
+def run_flask():
+    app.run(host='0.0.0.0', port=PORT)
+
+def run_bot():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     
-    # Регистрируем обработчик
+    application = Application.builder().token(TOKEN).build()
     application.add_handler(MessageHandler(filters.ALL, forward))
     
-    # Запускаем polling
-    await application.run_polling()
+    loop.run_until_complete(application.run_polling())
 
 if __name__ == '__main__':
     # Запускаем Flask в отдельном потоке
-    from threading import Thread
-    Thread(target=app.run, kwargs={'host':'0.0.0.0','port':PORT}, daemon=True).start()
+    flask_thread = Thread(target=run_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
     
-    # Запускаем бота
-    asyncio.run(start_bot())
+    # Запускаем бота в главном потоке
+    run_bot()
