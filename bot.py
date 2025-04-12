@@ -1,26 +1,36 @@
-from telegram.ext import Updater, MessageHandler
-from telegram.ext import filters  # Новое название вместо Filters!
+from telegram.ext import Application, MessageHandler, filters
+from telegram import Update
 from flask import Flask
 import os
+import asyncio
 
 app = Flask(__name__)
 
-TOKEN = "7603313779:AAE6tsonkxwULPaMWqam8HGX829naYTAs3w"
-CHAT_ID = -1002639758531
-PORT = int(os.environ.get('PORT', 10000))
+TOKEN = os.getenv('TOKEN', '7603313779:AAE6tsonkxwULPaMWqam8HGX829naYTAs3w')
+CHAT_ID = int(os.getenv('CHAT_ID', '-1002639758531'))
+PORT = int(os.getenv('PORT', 10000))
 
 @app.route('/')
 def home():
     return "Бот активен", 200
 
-def forward(update, context):
-    update.message.forward(chat_id=CHAT_ID)
+async def forward(update: Update, context):
+    await update.message.forward(chat_id=CHAT_ID)
+
+async def start_bot():
+    # Создаем Application вместо Updater
+    application = Application.builder().token(TOKEN).build()
+    
+    # Регистрируем обработчик
+    application.add_handler(MessageHandler(filters.ALL, forward))
+    
+    # Запускаем polling
+    await application.run_polling()
 
 if __name__ == '__main__':
-    updater = Updater(TOKEN)
-    dp = updater.dispatcher
-    dp.add_handler(MessageHandler(filters.ALL, forward))  # Используем filters.ALL
+    # Запускаем Flask в отдельном потоке
+    from threading import Thread
+    Thread(target=app.run, kwargs={'host':'0.0.0.0','port':PORT}, daemon=True).start()
     
-    app.run(host='0.0.0.0', port=PORT)
-    updater.start_polling()
-    updater.idle()
+    # Запускаем бота
+    asyncio.run(start_bot())
