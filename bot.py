@@ -1,6 +1,6 @@
 from telegram.ext import Updater, MessageHandler, Filters
 
-TOKEN = "7603313779:AAHpodzsNXjRZSfG1Ju9qJJDnDvQzL0AxH0"  # Замените на токен от @BotFather
+TOKEN = "7603313779:AAE6tsonkxwULPaMWqam8HGX829naYTAs3w"  # Замените на токен от @BotFather
 YOUR_CHAT_ID = -1002639758531  # Узнайте через @getmyid_bot
 
 def forward(update, context):
